@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"gyohuangxin/mesheryperf"
 	"os"
 	"path"
 	"strings"
@@ -26,6 +27,8 @@ import (
 	smp "github.com/layer5io/service-mesh-performance/spec"
 
 	// "github.com/layer5io/meshkit/tracing"
+	"github.com/gyohuangxin/meshery-perf/internal/config"
+	"github.com/gyohuangxin/meshery-perf/mesheryperf/oam"
 	"github.com/layer5io/meshery-adapter-library/adapter"
 	"github.com/layer5io/meshery-adapter-library/api/grpc"
 	configprovider "github.com/layer5io/meshkit/config/provider"
@@ -45,7 +48,6 @@ func init() {
 		os.Exit(1)
 	}
 }
-
 
 // main is the entrypoint of the adaptor
 func main() {
@@ -98,7 +100,7 @@ func main() {
 	// }
 
 	// Initialize Handler intance
-	// handler := istio.New(cfg, log, kubeconfigHandler)
+	handler := mesheryperf.New(cfg, log, kubeconfigHandler)
 	handler = adapter.AddLogger(log, handler)
 
 	service.Handler = handler
