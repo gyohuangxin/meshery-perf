@@ -16,7 +16,6 @@ package main
 
 import (
 	"fmt"
-	"gyohuangxin/mesheryperf"
 	"os"
 	"path"
 	"strings"
@@ -28,6 +27,7 @@ import (
 
 	// "github.com/layer5io/meshkit/tracing"
 	"github.com/gyohuangxin/meshery-perf/internal/config"
+	"github.com/gyohuangxin/meshery-perf/mesheryperf"
 	"github.com/gyohuangxin/meshery-perf/mesheryperf/oam"
 	"github.com/layer5io/meshery-adapter-library/adapter"
 	"github.com/layer5io/meshery-adapter-library/api/grpc"
