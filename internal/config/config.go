@@ -57,7 +57,7 @@ var (
 	ServerConfig = map[string]string{
 		"name":     "meshery-perf",
 		"type":     "adapter",
-		"port":     "10000",
+		"port":     "9999",
 		"traceurl": status.None,
 	}
 

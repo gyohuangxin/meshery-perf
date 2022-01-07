@@ -22,8 +22,6 @@ import (
 	"time"
 
 	"github.com/layer5io/meshkit/logger"
-	"github.com/layer5io/meshkit/utils/manifests"
-	smp "github.com/layer5io/service-mesh-performance/spec"
 
 	// "github.com/layer5io/meshkit/tracing"
 	"github.com/gyohuangxin/meshery-perf/internal/config"
@@ -108,8 +106,10 @@ func main() {
 	service.StartedAt = time.Now()
 	service.Version = version
 	service.GitSHA = gitsha
-	go registerCapabilities(service.Port, log)        //Registering static capabilities
-	go registerDynamicCapabilities(service.Port, log) //Registering latest capabilities periodically
+	go registerCapabilities(service.Port, log) //Registering static capabilities
+
+	// TODO: Implement Meshery Perf dynamic registeration
+	// go registerDynamicCapabilities(service.Port, log) //Registering latest capabilities periodically
 
 	// Server Initialization
 	log.Info("Meshery Perf Listening at port: ", service.Port)
@@ -160,50 +160,64 @@ func registerCapabilities(port string, log logger.Handler) {
 	}
 }
 
-func registerDynamicCapabilities(port string, log logger.Handler) {
-	registerWorkloads(port, log)
-	//Start the ticker
-	const reRegisterAfter = 24
-	ticker := time.NewTicker(reRegisterAfter * time.Hour)
-	for {
-		<-ticker.C
-		registerWorkloads(port, log)
-	}
+// func registerDynamicCapabilities(port string, log logger.Handler) {
+// 	registerWorkloads(port, log)
+// 	//Start the ticker
+// 	const reRegisterAfter = 24
+// 	ticker := time.NewTicker(reRegisterAfter * time.Hour)
+// 	for {
+// 		<-ticker.C
+// 		registerWorkloads(port, log)
+// 	}
 
-}
+// }
 
-func registerWorkloads(port string, log logger.Handler) {
-	release, err := config.GetLatestReleases(1)
-	if err != nil {
-		log.Info("Could not get latest stable release")
-		return
-	}
-	version := release[0].TagName
-	log.Info("Registering latest workload components for version ", version)
-	// Register workloads
-	if err := adapter.RegisterWorkLoadsDynamically(mesheryServerAddress(), serviceAddress()+":"+port, &adapter.DynamicComponentsConfig{
-		TimeoutInMinutes: 30,
-		URL:              "https://raw.githubusercontent.com/istio/istio/" + version + "/manifests/charts/base/crds/crd-all.gen.yaml",
-		GenerationMethod: adapter.Manifests,
-		Config: manifests.Config{
-			Name:        smp.ServiceMesh_Type_name[int32(smp.ServiceMesh_ISTIO)],
-			MeshVersion: version,
-			Filter: manifests.CrdFilter{
-				RootFilter:    []string{"$[?(@.kind==\"CustomResourceDefinition\")]"},
-				NameFilter:    []string{"$..[\"spec\"][\"names\"][\"kind\"]"},
-				VersionFilter: []string{"$[0]..spec.versions[0]"},
-				GroupFilter:   []string{"$[0]..spec"},
-				SpecFilter:    []string{"$[0]..openAPIV3Schema.properties.spec"},
-				ItrFilter:     []string{"$[?(@.spec.names.kind"},
-				ItrSpecFilter: []string{"$[?(@.spec.names.kind"},
-				VField:        "name",
-				GField:        "group",
-			},
-		},
-		Operation: config.IstioOperation,
-	}); err != nil {
-		log.Info(err.Error())
-		return
-	}
-	log.Info("Latest workload components successfully registered.")
-}
+// func registerWorkloads(port string, log logger.Handler) {
+// 	var url string
+// 	var gm string
+
+// 	version := ""
+
+// 	//If a URL is passed from env variable, it will be used for component generation with default method being "using manifests"
+// 	// In case a helm chart URL is passed, COMP_GEN_METHOD env variable should be set to Helm otherwise the component generation fails
+// 	if os.Getenv("COMP_GEN_URL") != "" {
+// 		url = os.Getenv("COMP_GEN_URL")
+// 		if os.Getenv("COMP_GEN_METHOD") == "Helm" || os.Getenv("COMP_GEN_METHOD") == "Manifest" {
+// 			gm = os.Getenv("COMP_GEN_METHOD")
+// 		} else {
+// 			gm = adapter.Manifests
+// 		}
+// 		log.Info("Registering workload components from url ", url, " using ", gm, " method...")
+// 	} else {
+// 		log.Info("Registering latest workload components for version ", version)
+// 		//default way
+// 		// url = "https://raw.githubusercontent.com/istio/istio/" + version + "/manifests/charts/base/crds/crd-all.gen.yaml"
+// 		gm = adapter.Manifests
+// 	}
+// 	// Register workloads
+// 	if err := adapter.RegisterWorkLoadsDynamically(mesheryServerAddress(), serviceAddress()+":"+port, &adapter.DynamicComponentsConfig{
+// 		TimeoutInMinutes: 30,
+// 		URL:              url,
+// 		GenerationMethod: gm,
+// 		Config: manifests.Config{
+// 			Name:        "Meshery-Perf",
+// 			MeshVersion: version,
+// 			Filter: manifests.CrdFilter{
+// 				RootFilter:    []string{"$[?(@.kind==\"CustomResourceDefinition\")]"},
+// 				NameFilter:    []string{"$..[\"spec\"][\"names\"][\"kind\"]"},
+// 				VersionFilter: []string{"$[0]..spec.versions[0]"},
+// 				GroupFilter:   []string{"$[0]..spec"},
+// 				SpecFilter:    []string{"$[0]..openAPIV3Schema.properties.spec"},
+// 				ItrFilter:     []string{"$[?(@.spec.names.kind"},
+// 				ItrSpecFilter: []string{"$[?(@.spec.names.kind"},
+// 				VField:        "name",
+// 				GField:        "group",
+// 			},
+// 		},
+// 		Operation: config.MesheryPerfOperation,
+// 	}); err != nil {
+// 		log.Info(err.Error())
+// 		return
+// 	}
+// 	log.Info("Latest workload components successfully registered.")
+// }

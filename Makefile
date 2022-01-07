@@ -14,7 +14,7 @@ docker:
 docker-run:
 	(docker rm -f meshery-perf) || true
 	docker run --name meshery-perf -d \
-	-p 10000:10000 \
+	-p 9999:9999\
 	-e DEBUG=true \
 	gyohuang/meshery-perf:edge-latest
 
